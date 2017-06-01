@@ -45,11 +45,10 @@ class imsi2area :
         self.excel = xlrd.open_workbook(file)
         self.sheet = self.excel.sheet_by_index(0) #第一个表
     
-    '''
-    获取xls文件中的imsi数据
-    '''
+    #获取xls文件中的imsi数据
     def getData(self):
         for i in range(1, self.sheet.nrows):
+            #获取excel中第一列
             imsi = self.sheet.cell(i,0).value
             if imsi == '#' or imsi == 0:
                 continue
@@ -62,9 +61,7 @@ class imsi2area :
     
 
 
-    '''
-    正则匹配imsi，转换为手机号段前缀
-    '''
+    #正则匹配imsi，转换为手机号段前缀
     def match(self, preg, tag, imsi):
         prefix = None
         pattern = re.compile(preg)
@@ -105,9 +102,7 @@ class imsi2area :
         }[tag](prefix)
         return result.replace('s', '')
     
-    '''
-    通过手机号段前缀获取地理位置信息
-    '''
+    #通过手机号段前缀获取地理位置信息
     def getArea(self, prefix, imsi):
         url = "https://sp0.baidu.com/8aQDcjqpAAV3otqbppnN2DJv/api.php?query=" + prefix  + "+%E6%89%8B%E6%9C%BA%E5%8F%B7%E6%AE%B5&resource_id=6004&ie=utf8&oe=utf8";
     
@@ -119,13 +114,8 @@ class imsi2area :
             sstr = "imsi：" + imsi + ",手机号码前缀：" + prefix + ",地区：" + data['data'][0]['type'] + data['data'][0]['prov'] + data['data'][0]['city']
         return sstr
 
-
+#主函数入口
 if __name__ == '__main__' :
     file = "imsi.xls"
-    #文件格式内容为
-    '''
-    4600012xxxxxxxxx
-    4600252xxxxxxxxx
-    '''
     imsi2area(file).getData()
   
