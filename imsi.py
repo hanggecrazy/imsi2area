@@ -109,14 +109,16 @@ class imsi2area :
     通过手机号段前缀获取地理位置信息
     '''
     def getArea(self, prefix, imsi):
-        url = "https://sp0.baidu.com/8aQDcjqpAAV3otqbppnN2DJv/api.php?query=" + prefix  + "+%E6%89%8B%E6%9C%BA%E5%8F%B7%E6%AE%B5&resource_id=6004&ie=utf8&oe=utf8";
+        url = "https://sp0.baidu.com/8aQDcjqpAAV3otqbppnN2DJv/api.php?query=" 
+        url += str(prefix) + "+%E6%89%8B%E6%9C%BA%E5%8F%B7%E6%AE%B5&resource_id=6004&ie=utf8&oe=utf8"
     
         req = urllib.request.Request(url)
         gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
         data = json.loads(urllib.request.urlopen(req, context = gcontext).read().decode('utf8'))
         sstr  = ''
         if data['data'] and data['data'][0] is not None :
-            sstr = "imsi：" + imsi + ",手机号码前缀：" + prefix + ",地区：" + data['data'][0]['type'] + data['data'][0]['prov'] + data['data'][0]['city']
+            sstr = "imsi：" + imsi + ",手机号码前缀：" + prefix + ",地区：" 
+            sstr += data['data'][0]['type'] + data['data'][0]['prov'] + data['data'][0]['city']
         return sstr
 
 
