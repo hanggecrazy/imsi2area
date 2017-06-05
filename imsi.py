@@ -1,15 +1,18 @@
-#!/usr/bin/env python 
+""" 通过imsi获取电话地理位置信息 """
+#!/usr/bin/env python3
 # -*-coding:utf-8-*-
-import xlrd
+
 import re
 import urllib.request
 import json
 import ssl
+import xlrd
 
-class imsi2area :
-    
-    def __init__(self, file) :
-        #定义映射字典
+class imsi2area:
+    """ imsi类 """
+
+    def __init__(self, filename):
+        # 定义映射字典
         self.dicts = {
             's130'  : "^46001(\\d{3})(\\d)[0,1]\\d+",
             's131'  : "^46001(\\d{3})(\\d)9\\d+",
@@ -31,93 +34,95 @@ class imsi2area :
             's187'  : "^460027(\\d)(\\d{3})\\d+",
             's188'  : "^460078(\\d)(\\d{3})\\d+",
             's1705' : "^460070(\\d)(\\d{3})\\d+",
-            's170x' : "^46001(\\d{3})(\\d)8\\d+", 
+            's170x' : "^46001(\\d{3})(\\d)8\\d+",
             's178'  : "^460075(\\d)(\\d{3})\\d+",
             's145'  : "^46001(\\d{3})(\\d)7\\d+",
             's182'  : "^460026(\\d)(\\d{3})\\d+",
             's183'  : "^460025(\\d)(\\d{3})\\d+",
             's184'  : "^460024(\\d)(\\d{3})\\d+",
-            #电信的，下面的还没有找到规则
+            # 电信的，下面的还没有找到规则
             's180'  : "^46003(\\d)(\\d{3})7\\d+",
             's153'  : "^46003(\\d)(\\d{3})8\\d+",
             's189'  : "^46003(\\d)(\\d{3})9\\d+",
         }
-        self.excel = xlrd.open_workbook(file)
-        self.sheet = self.excel.sheet_by_index(0) #第一个表
-    
-    #获取xls文件中的imsi数据
+        self.excel = xlrd.open_workbook(filename)
+        self.sheet = self.excel.sheet_by_index(0) # 第一个表
+
     def getData(self):
+        """ 获取数据 """
+
         for i in range(1, self.sheet.nrows):
-            #获取excel中第一列
-            imsi = self.sheet.cell(i,0).value
+            # 获取excel中第一列
+            imsi = self.sheet.cell(i, 0).value
             if imsi == '#' or imsi == 0:
                 continue
             for dic in self.dicts:
                 prefix = self.match(self.dicts[dic], dic, imsi)
-                if prefix is None :
+                if prefix is None:
                     continue
                 sstr = self.getArea(prefix, imsi)
                 print(sstr)
-    
 
+    @staticmethod
+    def match(preg, tag, imsi):
+        """ 正则匹配imsi，转换为手机号段前缀 """
 
-    #正则匹配imsi，转换为手机号段前缀
-    def match(self, preg, tag, imsi):
         prefix = None
         pattern = re.compile(preg)
         res = pattern.findall(imsi)
-        if res == [] :
+        if res == []:
             return prefix
-    
+
         result = {
-            's130'  : lambda prefix : tag + res[0][1] + res[0][0],
-            's131'  : lambda prefix : tag + res[0][1] + res[0][0],
-            's132'  : lambda prefix : tag + res[0][1] + res[0][0],
-            's134'  : lambda prefix : tag + res[0][0] + res[0][1],
-            's13x0' : lambda prefix : 's13' + res[0][1] + '0' + res[0][0],
-            's13x'  : lambda prefix : 's13' + str(int(res[0][1]) + 5) + res[0][2] + res[0][0],
-            's150'  : lambda prefix : tag + res[0][1] + res[0][0],
-            's151'  : lambda prefix : tag + res[0][0] + res[0][1],
-            's152'  : lambda prefix : tag + res[0][0] + res[0][1],
-            's155'  : lambda prefix : tag + res[0][1] + res[0][0],
-            's156'  : lambda prefix : tag + res[0][1] + res[0][0],
-            's157'  : lambda prefix : tag + res[0][0] + res[0][1],
-            's158'  : lambda prefix : tag + res[0][0] + res[0][1],
-            's159'  : lambda prefix : tag + res[0][0] + res[0][1],
-            's147'  : lambda prefix : tag + res[0][0] + res[0][1],
-            's185'  : lambda prefix : tag + res[0][1] + res[0][0],
-            's186'  : lambda prefix : tag + res[0][1] + res[0][0],
-            's187'  : lambda prefix : tag + res[0][0] + res[0][1],
-            's188'  : lambda prefix : tag + res[0][0] + res[0][1],
-            's1705' : lambda prefix : 's170' + res[0][0] + res[0][1],
-            's170x' : lambda prefix : 's170' + res[0][1] + res[0][0],
-            's178'  : lambda prefix : tag + res[0][0] + res[0][1],
-            's145'  : lambda prefix : tag + res[0][1] + res[0][0],
-            's182'  : lambda prefix : tag + res[0][0] + res[0][1],
-            's183'  : lambda prefix : tag + res[0][0] + res[0][1],
-            's184'  : lambda prefix : tag + res[0][0] + res[0][1],
-            's180'  : lambda prefix : tag + res[0][0] + res[0][1],
-            's153'  : lambda prefix : tag + res[0][0] + res[0][1],
-            's189'  : lambda prefix : tag + res[0][0] + res[0][1]
+            's130' : lambda prefix: tag + res[0][1] + res[0][0],
+            's131' : lambda prefix: tag + res[0][1] + res[0][0],
+            's132' : lambda prefix: tag + res[0][1] + res[0][0],
+            's134' : lambda prefix: tag + res[0][0] + res[0][1],
+            's13x0' : lambda prefix: 's13' + res[0][1] + '0' + res[0][0],
+            's13x' : lambda prefix: 's13' + str(int(res[0][1]) + 5) + res[0][2] + res[0][0],
+            's150' : lambda prefix: tag + res[0][1] + res[0][0],
+            's151' : lambda prefix: tag + res[0][0] + res[0][1],
+            's152' : lambda prefix: tag + res[0][0] + res[0][1],
+            's155' : lambda prefix: tag + res[0][1] + res[0][0],
+            's156' : lambda prefix: tag + res[0][1] + res[0][0],
+            's157' : lambda prefix: tag + res[0][0] + res[0][1],
+            's158' : lambda prefix: tag + res[0][0] + res[0][1],
+            's159' : lambda prefix: tag + res[0][0] + res[0][1],
+            's147' : lambda prefix: tag + res[0][0] + res[0][1],
+            's185' : lambda prefix: tag + res[0][1] + res[0][0],
+            's186' : lambda prefix: tag + res[0][1] + res[0][0],
+            's187' : lambda prefix: tag + res[0][0] + res[0][1],
+            's188' : lambda prefix: tag + res[0][0] + res[0][1],
+            's1705': lambda prefix: 's170' + res[0][0] + res[0][1],
+            's170x' : lambda prefix: 's170' + res[0][1] + res[0][0],
+            's178' : lambda prefix: tag + res[0][0] + res[0][1],
+            's145' : lambda prefix: tag + res[0][1] + res[0][0],
+            's182' : lambda prefix: tag + res[0][0] + res[0][1],
+            's183' : lambda prefix: tag + res[0][0] + res[0][1],
+            's184' : lambda prefix: tag + res[0][0] + res[0][1],
+            's180' : lambda prefix: tag + res[0][0] + res[0][1],
+            's153' : lambda prefix: tag + res[0][0] + res[0][1],
+            's189' : lambda prefix: tag + res[0][0] + res[0][1]
         }[tag](prefix)
         return result.replace('s', '')
-    
-    #通过手机号段前缀获取地理位置信息
-    def getArea(self, prefix, imsi):
-        url = "https://sp0.baidu.com/8aQDcjqpAAV3otqbppnN2DJv/api.php?query=" 
-        url += str(prefix) + "+%E6%89%8B%E6%9C%BA%E5%8F%B7%E6%AE%B5&resource_id=6004&ie=utf8&oe=utf8"
-    
+
+    @staticmethod
+    def getArea(prefix, imsi):
+        """ 通过手机号段前缀获取地理位置信息 """
+
+        url = "https://sp0.baidu.com/8aQDcjqpAAV3otqbppnN2DJv/api.php?query=" + str(prefix)
+        url += "+%E6%89%8B%E6%9C%BA%E5%8F%B7%E6%AE%B5&resource_id=6004&ie=utf8&oe=utf8"
+
         req = urllib.request.Request(url)
         gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
-        data = json.loads(urllib.request.urlopen(req, context = gcontext).read().decode('utf8'))
-        sstr  = ''
-        if data['data'] and data['data'][0] is not None :
-            sstr = "imsi：" + imsi + ",手机号码前缀：" + prefix + ",地区：" 
+        data = json.loads(urllib.request.urlopen(req, context=gcontext).read().decode('utf8'))
+        sstr = ''
+        if data['data'] and data['data'][0] is not None:
+            sstr = "imsi：" + imsi + ",手机号码前缀：" + prefix + ",地区："
             sstr += data['data'][0]['type'] + data['data'][0]['prov'] + data['data'][0]['city']
         return sstr
 
-#主函数入口
-if __name__ == '__main__' :
+# 主函数入口
+if __name__ == '__main__':
     file = "imsi.xls"
     imsi2area(file).getData()
-  
